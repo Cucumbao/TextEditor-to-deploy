@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Перегляд файлу</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header>
+    <h1>TextEditor</h1>
+    <div class="user-info" th:if="${currentUser != null}">
+        <span th:text="${currentUser.username}"></span>
+        <a th:href="@{/logout}" class="logout">Вийти</a>
+    </div>
+</header>
+
+<div class="container">
+    <h2 style="color: #ffffff; font-size: 35px;" th:text="${file.fileName}">Назва файлу</h2>
+
+    <div th:if="${highlightedContent != null}">
+        <div class="code-view" th:utext="${highlightedContent}"></div>
+    </div>
+
+    <div th:if="${highlightedContent == null}">
+        <pre class="code-view" th:text="${file.content}"></pre>
+    </div>
+
+    <div class="actions" style="margin-top: 20px;">
+        <a th:href="@{|/files/${file.id}/edit|}" class="button">✏️ Редагувати</a>
+        <a th:href="@{/files}" class="button back-link">← Назад</a>
+    </div>
+</div>
+</body>
+</html>

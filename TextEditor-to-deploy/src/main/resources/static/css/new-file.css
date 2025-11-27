@@ -1,0 +1,151 @@
+/* Загальні стилі сторінки */
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #6e9eb5;
+    color: #4c4c7c;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Фіксований header */
+header {
+    height: 50px;
+    background-color: #16164c;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    z-index: 1000;
+    flex-shrink: 0;
+}
+
+header h1 {
+    font-size: 18px;
+    color: #ffffff;
+    margin: 0;
+}
+
+header .user-info {
+    font-size: 14px;
+    color: #ffffff;
+}
+
+header a.logout {
+    color: #ffffff;
+    text-decoration: none;
+    margin-left: 15px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+header a.logout:hover {
+    color: #ff6b6b;
+}
+
+/* Контейнер форми */
+.container {
+    background: #ffffff;
+    max-width: 600px;
+    width: 90%;
+    margin: 3rem auto;
+    padding: 2.5rem;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+}
+
+/* Елементи форми */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+input[type="text"],
+textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 1.5rem; /* Відступ замість <br> */
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box; /* Щоб padding не ламав ширину */
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    outline: none;
+}
+
+textarea {
+    resize: vertical; /* Дозволяє змінювати висоту */
+    min-height: 150px;
+    font-family: 'Consolas', 'Monaco', monospace; /* Моноширинний шрифт для коду/тексту */
+    line-height: 1.5;
+}
+
+/* Кнопка */
+button[type="submit"] {
+    background-color: #27ae60;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    margin-top: 1rem;
+}
+
+button[type="submit"]:hover {
+    background-color: #219150;
+}
+
+button[type="submit"]:active {
+    transform: scale(0.98);
+}
+
+/* Посилання "Назад" */
+.back-link {
+    display: block;
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #7f8c8d;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+}
+
+.back-link:hover {
+    color: #2c3e50;
+    text-decoration: underline;
+}
+/* Посилання */
+a {
+    color: #2575fc;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+a:hover {
+    text-decoration: underline;
+}

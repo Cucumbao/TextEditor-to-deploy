@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Редагування файлу</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header>
+    <h1>TextEditor</h1>
+    <div class="user-info" th:if="${currentUser != null}">
+        <span th:text="${currentUser.username}"></span>
+        <a th:href="@{/logout}" class="logout">Вийти</a>
+    </div>
+</header>
+
+<div class="container" style="flex-direction: column; display: flex; height: 90%;">
+    <div class="editor-controls" style=" margin-bottom: 10px; display: flex; gap: 10px;">
+        <!-- Команди реду та анду -->
+        <form th:action="@{/files/{id}/undo(id=${file.id})}" method="post">
+            <button type="submit" class="button">↶ Undo</button>
+        </form>
+        <form th:action="@{/files/{id}/redo(id=${file.id})}" method="post">
+            <button type="submit" class="button">↷ Redo</button>
+        </form>
+
+        <button type="button" class="button" id="openSnippetListModal">📄 Сніппети</button>
+        <button type="button" class="button" id="openMacroListModal">⚙️ Макроси</button>
+        <button type="button" class="button" id="openBookmarkListModal">🔖 Закладки</button>
+
+    </div>
+    <!-- Відображення файлу -->
+    <form th:action="@{|/files/${file.id}/edit|}" method="post" style="flex:1; display:flex; flex-direction:column;">
+        <input id="fileName" name="name" th:value="${file.fileName}">
+        <textarea id="fileContent" name="content" th:text="${fileContent}" th:attr="data-file-id=${file.id}" style="flex:1;"></textarea>
+        <div class="actions" style="margin-top:10px; justify-content:flex-end;">
+            <button type="submit" class="button">💾 Зберегти</button>
+            <a th:href="@{/files/{id}/download(id=${file.id})}" class="button" style="text-decoration: none;">
+                Завантажити на ПК
+            </a>
+            <a th:href="@{|/files/${file.id}|}" class="button">Назад</a>
+        </div>
+    </form>
+</div>
+
+<!-- ------------------ Модалки Закладок ------------------ -->
+<div id="bookmarkListModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>🔖 Закладки у файлі</h2>
+        <div style="max-height: 300px; overflow-y:auto; padding:5px;">
+            <th:block th:each="bm : ${bookmarks}">
+                <div class="bookmark-item" style="display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #eee;">
+
+                    <div style="flex: 1;">
+                        <button type="button" class="button" style="background-color: #f0f0f0; color: #333;"
+                                th:onclick="'jumpToLine(' + ${bm.lineNumber} + ')'">
+                            Go to <b th:text="${bm.lineNumber}"></b>
+                        </button>
+                        <span th:text="${bm.description}" style="margin-left: 10px; font-style: italic;">Опис</span>
+                    </div>
+
+                    <button type="button" class="edit-bookmark button" style="margin-left:5px;"
+                            th:data-id="${bm.id}" th:data-line="${bm.lineNumber}" th:data-desc="${bm.description}">✏️</button>
+
+                    <form th:action="@{/bookmarks/{id}/delete(id=${bm.id})}" method="post" style="margin-left:10px;">
+                        <input type="hidden" name="fileId" th:value="${file.id}">
+                        <button type="submit" style="background:none; border:none; color:red; font-size:18px; cursor:pointer;">❌</button>
+                    </form>
+                </div>
+            </th:block>
+            <div th:if="${#lists.isEmpty(bookmarks)}" style="text-align: center; color: gray; padding: 10px;">
+                Закладок ще немає
+            </div>
+        </div>
+        <button type="button" onclick="openCreateBookmarkModalWithCurrentLine()" class="button" style="margin-top:15px;">➕ Додати закладку (поточний рядок)</button>
+    </div>
+</div>
+
+<div id="createBookmarkModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Додати закладку</h2>
+        <form th:action="@{/bookmarks/create}" method="post">
+            <input type="hidden" name="fileId" th:value="${file.id}">
+
+            <label for="newBookmarkLine">Номер рядка:</label>
+            <input type="number" id="newBookmarkLine" name="lineNumber" required style="width:100px; margin-bottom:10px;">
+
+            <label for="newBookmarkDesc">Опис:</label>
+            <input type="text" id="newBookmarkDesc" name="description" placeholder="Наприклад: Важлива функція" required style="width:100%; margin-bottom:10px;">
+
+            <button type="submit" class="button">💾 Зберегти</button>
+        </form>
+    </div>
+</div>
+
+<div id="editBookmarkModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Редагувати закладку</h2>
+        <form id="editBookmarkForm" method="post">
+            <input type="hidden" name="fileId" th:value="${file.id}">
+            <input type="hidden" name="id" id="editBookmarkId">
+
+            <label for="editBookmarkLine">Номер рядка:</label>
+            <input type="number" id="editBookmarkLine" name="lineNumber" required style="width:100px; margin-bottom:10px;">
+
+            <label for="editBookmarkDesc">Опис:</label>
+            <input type="text" id="editBookmarkDesc" name="description" required style="width:100%; margin-bottom:10px;">
+
+            <button type="submit" class="button">💾 Зберегти</button>
+        </form>
+    </div>
+</div>
+
+<!-- ------------------ Модалки Сніпетів ------------------ -->
+<div id="snippetListModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal" style="cursor:pointer; float:right;">&times;</span>
+        <h2>Ваші сніппети</h2>
+
+        <div style="max-height: 300px; overflow-y:auto; padding:5px;">
+            <th:block th:each="snippet : ${snippets}">
+                <div class="snippet-item" style="display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #eee;">
+
+                    <form th:action="@{/snippets/{id}/insert(id=${snippet.id})}" method="post" onsubmit="captureCursor(this)" style="display:inline; width: auto; flex: 1;">
+                        <input type="hidden" name="fileId" th:value="${file.id}">
+                        <input type="hidden" name="cursorPosition" class="cursor-input" value="-1">
+
+                        <button type="submit" class="button item-name-btn" th:text="${snippet.name}">
+                            Вставити
+                        </button>
+                    </form>
+
+                    <div style="display: flex; align-items: center;">
+                        <button type="button" class="edit-snippet button" style="margin-left:5px;"
+                                th:data-id="${snippet.id}" th:data-name="${snippet.name}" th:data-content="${snippet.content}">✏️</button>
+
+                        <form th:action="@{/snippets/{id}/delete(id=${snippet.id})}" method="post" style="margin-left:5px;">
+                            <input type="hidden" name="fileId" th:value="${file.id}">
+                            <button type="submit" style="background:none; border:none; color:red; font-size:18px; cursor:pointer;">❌</button>
+                        </form>
+                    </div>
+                </div>
+            </th:block>
+            <div th:if="${#lists.isEmpty(snippets)}" style="text-align: center; color: gray; padding: 10px;">
+                Сніппетів ще немає
+            </div>
+        </div>
+        <button type="button" id="openCreateSnippetModalBtn" class="button" style="margin-top:15px;">✨ Створити новий сніппет</button>
+    </div>
+</div>
+<!-- Створення нового сніпету -->
+<div id="createSnippetModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-create-snippet">&times;</span>
+        <h2>Створити новий сніппет</h2>
+        <form th:action="@{/snippets/create}" method="post">
+            <input type="hidden" name="fileId" th:value="${file.id}">
+            <label for="newSnippetName">Назва:</label>
+            <input type="text" id="newSnippetName" name="name" required style="width:100%; margin-bottom:10px;">
+            <label for="newSnippetContent">Вміст:</label>
+            <textarea id="newSnippetContent" name="content" required style="width:100%; height:150px;"></textarea>
+            <button type="submit" class="button">💾 Зберегти</button>
+        </form>
+    </div>
+</div>
+<!-- Редагування сніпету -->
+<div id="editSnippetModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-edit-snippet">&times;</span>
+        <h2>Редагувати сніпет</h2>
+        <form id="editSnippetForm" method="post">
+            <input type="hidden" name="fileId" th:value="${file.id}">
+            <input type="hidden" name="id" id="editSnippetId">
+            <label for="editSnippetName">Назва:</label>
+            <input type="text" id="editSnippetName" name="name" required style="width:100%; margin-bottom:10px;">
+            <label for="editSnippetContent">Вміст:</label>
+            <textarea id="editSnippetContent" name="content" required style="width:100%; height:150px;"></textarea>
+            <button type="submit" class="button">💾 Зберегти</button>
+        </form>
+    </div>
+</div>
+
+<!-- ------------------ Модалки Макросів ------------------ -->
+<div id="macroListModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-modal" style="cursor:pointer; float:right;">&times;</span>
+        <h2>Ваші макроси</h2>
+
+        <div style="max-height: 300px; overflow-y:auto; padding:5px;">
+            <th:block th:each="macro : ${macros}">
+                <div class="macro-item" style="display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #eee;">
+
+                    <form th:action="@{/macros/{id}/insert(id=${macro.id})}" method="post" onsubmit="captureCursor(this)" style="display:inline; width: auto; flex: 1;">
+                        <input type="hidden" name="fileId" th:value="${file.id}">
+                        <input type="hidden" name="cursorPosition" class="cursor-input" value="-1">
+
+                        <button type="submit" class="button item-name-btn" th:text="${macro.name}">
+                            Вставити
+                        </button>
+                    </form>
+
+                    <div style="display: flex; align-items: center;">
+                        <button type="button" class="edit-macro button" style="margin-left:5px;"
+                                th:data-id="${macro.id}" th:data-name="${macro.name}" th:data-commands="${macro.commands}">✏️</button>
+
+                        <form th:action="@{/macros/{id}/delete(id=${macro.id})}" method="post" style="margin-left:5px;">
+                            <input type="hidden" name="fileId" th:value="${file.id}">
+                            <button type="submit" style="background:none; border:none; color:red; font-size:18px; cursor:pointer;">❌</button>
+                        </form>
+                    </div>
+                </div>
+            </th:block>
+            <div th:if="${#lists.isEmpty(macros)}" style="text-align: center; color: gray; padding: 10px;">
+                Макросів ще немає
+            </div>
+        </div>
+        <button type="button" id="openCreateMacroModalBtn" class="button" style="margin-top:15px;">✨ Створити новий макрос</button>
+    </div>
+</div>
+<!-- Створення нового макросу -->
+<div id="createMacroModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-create-macro">&times;</span>
+        <h2>Створити новий макрос</h2>
+        <form th:action="@{/macros/create}" method="post">
+            <input type="hidden" name="fileId" th:value="${file.id}">
+            <label for="newMacroName">Назва макросу:</label>
+            <input type="text" id="newMacroName" name="name" required style="width:100%; margin-bottom:10px;">
+            <label for="newMacroCommands">Команди:</label>
+            <textarea id="newMacroCommands" name="commands" required style="width:100%; height:150px;"></textarea>
+            <button type="submit" class="button">💾 Зберегти</button>
+        </form>
+    </div>
+</div>
+<!-- Редагування макросу -->
+<div id="editMacroModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-edit-macro">&times;</span>
+        <h2>Редагувати макрос</h2>
+        <form id="editMacroForm" method="post">
+            <input type="hidden" name="fileId" th:value="${file.id}">
+            <input type="hidden" name="id" id="editMacroId">
+            <label for="editMacroName">Назва:</label>
+            <input type="text" id="editMacroName" name="name" required style="width:100%; margin-bottom:10px;">
+            <label for="editMacroCommands">Команди:</label>
+            <textarea id="editMacroCommands" name="commands" required style="width:100%; height:150px;"></textarea>
+            <button type="submit" class="button">💾 Зберегти</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const editor = document.getElementById("fileContent");
+    const fileId = editor.dataset.fileId;
+    let lastCursorPosition = -1;
+
+    // --- Відстеження курсора ---
+    ['click', 'keyup', 'input', 'focus'].forEach(evt =>
+        editor.addEventListener(evt, () => {
+            lastCursorPosition = editor.selectionStart;
+        })
+    );
+    function getCurrentLineNumber() {
+        if (!editor) return 1;
+        const textUpToCursor = editor.value.substr(0, editor.selectionStart);
+        return textUpToCursor.split("\n").length;
+    }
+
+    // 2. Відкриття модалки створення закладки (підставляє рядок)
+    function openCreateBookmarkModalWithCurrentLine() {
+        const lineNum = getCurrentLineNumber();
+        document.getElementById("newBookmarkLine").value = lineNum;
+
+        // Закриваємо список, відкриваємо створення
+        document.getElementById("bookmarkListModal").style.display = "none";
+        document.getElementById("createBookmarkModal").style.display = "block";
+    }
+
+    // 3. Функція переходу до рядка (Jump)
+    function jumpToLine(lineNumber) {
+        if (!editor) return;
+        document.getElementById("bookmarkListModal").style.display = "none";
+        const lines = editor.value.split("\n");
+        let charIndex = 0;
+
+        for (let i = 0; i < lineNumber - 1; i++) {
+            if (i < lines.length) {
+                charIndex += lines[i].length + 1;
+            }
+        }
+        editor.focus();
+        editor.setSelectionRange(charIndex, charIndex);
+        editor.blur();
+        editor.focus();
+    }
+
+
+    // --- Керування модалками ---
+    const modals = {
+        snippetList: document.getElementById("snippetListModal"),
+        createSnippet: document.getElementById("createSnippetModal"),
+        editSnippet: document.getElementById("editSnippetModal"),
+        macroList: document.getElementById("macroListModal"),
+        createMacro: document.getElementById("createMacroModal"),
+        editMacro: document.getElementById("editMacroModal"),
+        bookmarkList: document.getElementById("bookmarkListModal"),
+        createBookmark: document.getElementById("createBookmarkModal"),
+        editBookmark: document.getElementById("editBookmarkModal")
+    };
+
+    // Відкриття списків
+    document.getElementById("openSnippetListModal")?.addEventListener("click", () => modals.snippetList.style.display = "block");
+    document.getElementById("openMacroListModal")?.addEventListener("click", () => modals.macroList.style.display = "block");
+    document.getElementById("openBookmarkListModal")?.addEventListener("click", () => modals.bookmarkList.style.display = "block");
+
+    // Кнопки всередині модалок
+    document.getElementById("openCreateSnippetModalBtn")?.addEventListener("click", () => modals.createSnippet.style.display = "block");
+    document.getElementById("openCreateMacroModalBtn")?.addEventListener("click", () => modals.createMacro.style.display = "block");
+
+    // Закриття (хрестик)
+    document.querySelectorAll(".close-modal").forEach(btn =>
+        btn.addEventListener("click", () => btn.closest(".modal").style.display = "none")
+    );
+
+    // Закриття по кліку за межі
+    window.onclick = event => {
+        Object.values(modals).forEach(modal => {
+            if (event.target === modal) modal.style.display = "none";
+        });
+    };
+
+    // Редагування Сніпетів
+    document.querySelectorAll(".edit-snippet").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.getElementById("editSnippetId").value = btn.dataset.id;
+            document.getElementById("editSnippetName").value = btn.dataset.name;
+            document.getElementById("editSnippetContent").value = btn.dataset.content;
+            document.getElementById("editSnippetForm").action = `/snippets/${btn.dataset.id}/update`;
+            modals.editSnippet.style.display = "block";
+        });
+    });
+
+    // Редагування Макросів
+    document.querySelectorAll(".edit-macro").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.getElementById("editMacroId").value = btn.dataset.id;
+            document.getElementById("editMacroName").value = btn.dataset.name;
+            document.getElementById("editMacroCommands").value = btn.dataset.commands;
+            document.getElementById("editMacroForm").action = `/macros/${btn.dataset.id}/update`;
+            modals.editMacro.style.display = "block";
+        });
+    });
+
+    // Редагування Закладок
+    document.querySelectorAll(".edit-bookmark").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.getElementById("editBookmarkId").value = btn.dataset.id;
+            document.getElementById("editBookmarkLine").value = btn.dataset.line;
+            document.getElementById("editBookmarkDesc").value = btn.dataset.desc;
+            document.getElementById("editBookmarkForm").action = `/bookmarks/${btn.dataset.id}/update`;
+            modals.editBookmark.style.display = "block";
+        });
+    });
+
+
+    // --- Інше (Автозбереження та cursor) ---
+    let timeout;
+    editor.addEventListener("input", () => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            fetch(`/files/${fileId}/storage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `content=${encodeURIComponent(editor.value)}&name=${encodeURIComponent(document.getElementById("fileName").value)}`
+            });
+        }, 500);
+    });
+
+    function captureCursor(formElement) {
+        let hiddenInput = formElement.querySelector('.cursor-input');
+        if(hiddenInput) hiddenInput.value = lastCursorPosition;
+        return true;
+    }
+</script>
+</body>
+</html>
