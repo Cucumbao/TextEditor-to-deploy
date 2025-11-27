@@ -1,0 +1,16 @@
+[{
+  "id": 1,
+  "name": "приклад",
+  "content": "System.out.println(\"Hello, World!\");"
+},
+  {
+    "id": 2,
+    "name": "showDate",
+    "content": "java.time.LocalDate.now()"
+  },
+  {
+    "id": 3,
+    "name": "showTime",
+    "content": "java.time.LocalTime.now()"
+  }
+]
