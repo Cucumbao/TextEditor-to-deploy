@@ -98,9 +98,6 @@ a {
     text-decoration: none;
 }
 
-a:hover {
-    text-decoration: underline;
-}
 
 /* Повідомлення */
 .error {
@@ -116,15 +113,15 @@ a:hover {
 }
 /* Модальне вікно (фон) */
 .modal {
-    display: none; /* Приховано за замовчуванням */
+    display: none;
     position: fixed;
-    z-index: 100; /* Поверх усього */
+    z-index: 100;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0,0,0,0.4); /* Чорний з прозорістю */
+    background-color: rgba(0,0,0,0.4);
     padding-top: 60px;
 }
 

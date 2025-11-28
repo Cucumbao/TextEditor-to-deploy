@@ -1,4 +1,4 @@
-Це тестовий файл
+ЦЕ ТЕСТОВИЙ ФАЙЛ
 6
 public class HelloWorld {
     public static void main(String[] args) {

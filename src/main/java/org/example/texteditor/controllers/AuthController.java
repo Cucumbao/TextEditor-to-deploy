@@ -26,29 +26,22 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    // --- Сторінка логіну ---
     @GetMapping("/")
     public String loginPage(Model model) {
         model.addAttribute("user", new User(null, "", "", ""));
         return "login";
     }
 
-    // --- Логіка входу (Login) ---
     @PostMapping("/login")
     public String loginUser(@RequestParam String username,
                             @RequestParam String password,
-                            HttpServletResponse response, // Щоб записати Куку
+                            HttpServletResponse response,
                             Model model) {
-
-
         User user = userRepository.findByUsername(username);
-
 
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
 
-
             String token = jwtUtil.generateToken(username);
-
 
             Cookie cookie = new Cookie("JWT_TOKEN", token);
             cookie.setHttpOnly(true);
@@ -64,17 +57,14 @@ public class AuthController {
         }
     }
 
-    // --- Сторінка реєстрації ---
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
         model.addAttribute("user", new User(null, "", "", ""));
         return "register";
     }
 
-    // --- Логіка реєстрації ---
     @PostMapping("/register")
     public String registerUser(@ModelAttribute User user, Model model) {
-        // Перевірка, чи такий юзер вже є
         if (userRepository.findByUsername(user.getUsername()) != null) {
             model.addAttribute("errorMessage", "Користувач з таким ім'ям вже існує!");
             return "register";
@@ -90,7 +80,6 @@ public class AuthController {
         return "login";
     }
 
-    // --- Логіка виходу (Logout) ---
     @GetMapping("/logout")
     public String logout(HttpServletResponse response, HttpSession session) {
 

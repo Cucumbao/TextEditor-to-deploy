@@ -2,6 +2,7 @@ package org.example.texteditor.controllers;
 
 import jakarta.servlet.http.HttpSession;
 import org.example.texteditor.Service.command.*;
+import org.example.texteditor.Service.templatemethod.TextCaseProcessor;
 import org.example.texteditor.flyweight.JavaSyntaxHighlighter;
 import org.example.texteditor.model.*;
 import org.example.texteditor.repo.*;
@@ -13,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.example.texteditor.repo.FileRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -27,11 +29,17 @@ public class FileController {
     private final BookmarkRepository bookmarkRepository;
     private final JavaSyntaxHighlighter syntaxHighlighter;
     private final UserRepository userRepository;
+    private final Map<String, TextCaseProcessor> processors;
 
 
-    public FileController(SnippetRepository snippetRepository, FileRepository fileRepository,
-                          MacroRepository macroRepository, CommandHistory commandHistory,
-                          BookmarkRepository bookmarkRepository, JavaSyntaxHighlighter syntaxHighlighter, UserRepository userRepository) {
+    public FileController(SnippetRepository snippetRepository,
+                          FileRepository fileRepository,
+                          MacroRepository macroRepository,
+                          CommandHistory commandHistory,
+                          BookmarkRepository bookmarkRepository,
+                          JavaSyntaxHighlighter syntaxHighlighter,
+                          UserRepository userRepository,
+                          Map<String, TextCaseProcessor> processors) {
         this.snippetRepository = snippetRepository;
         this.fileRepository = fileRepository;
         this.macroRepository = macroRepository;
@@ -39,6 +47,7 @@ public class FileController {
         this.bookmarkRepository = bookmarkRepository;
         this.syntaxHighlighter = syntaxHighlighter;
         this.userRepository = userRepository;
+        this.processors = processors;
     }
 
     // --- показати файли користувача ---
@@ -194,5 +203,16 @@ public class FileController {
             content = (file != null && file.getContent() != null) ? file.getContent() : "";
         }
         return content;
+    }
+    @PostMapping("/transform")
+    @ResponseBody
+    public ResponseEntity<String> transformText(@RequestParam String text,
+                                                @RequestParam String type) {
+        TextCaseProcessor processor = processors.get(type);
+        if (processor == null) {
+            return ResponseEntity.badRequest().body("Невідомий тип трансформації");
+        }
+        String result = processor.processText(text);
+        return ResponseEntity.ok(result);
     }
 }

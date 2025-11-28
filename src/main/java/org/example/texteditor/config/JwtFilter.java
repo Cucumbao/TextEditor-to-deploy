@@ -17,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final ThisUserDetailsService userDetailsService; // Тобі треба буде створити цей сервіс
+    private final ThisUserDetailsService userDetailsService;
 
     public JwtFilter(JwtUtil jwtUtil, ThisUserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;

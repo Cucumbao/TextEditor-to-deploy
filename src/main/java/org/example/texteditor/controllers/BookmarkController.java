@@ -1,8 +1,6 @@
 package org.example.texteditor.controllers;
 
-import jakarta.servlet.http.HttpSession;
 import org.example.texteditor.model.Bookmark;
-import org.example.texteditor.model.User;
 import org.example.texteditor.repo.BookmarkRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;

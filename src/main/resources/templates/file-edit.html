@@ -28,6 +28,9 @@
         <button type="button" class="button" id="openSnippetListModal">📄 Сніппети</button>
         <button type="button" class="button" id="openMacroListModal">⚙️ Макроси</button>
         <button type="button" class="button" id="openBookmarkListModal">🔖 Закладки</button>
+        <button type="button" class="button" onclick="transformSelection('upper')" style="cursor: pointer;">AA</button>
+        <button type="button" class="button" onclick="transformSelection('lower')" style="cursor: pointer;">aa</button>
+        <button type="button" class="button" onclick="transformSelection('sentence')" title="Як у реченнях">Aa</button>
 
     </div>
     <!-- Відображення файлу -->
@@ -384,6 +387,37 @@
         let hiddenInput = formElement.querySelector('.cursor-input');
         if(hiddenInput) hiddenInput.value = lastCursorPosition;
         return true;
+    }
+
+    async function transformSelection(type) {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end);
+
+        if (!selectedText) {
+            alert("Будь ласка, виділіть текст для форматування!");
+            return;
+        }
+        const formData = new FormData();
+        formData.append('text', selectedText);
+        formData.append('type', type);
+        try {
+            const response = await fetch('/files/transform', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                const newText = await response.text();
+                editor.setRangeText(newText, start, end, 'select');
+                editor.dispatchEvent(new Event('input'));
+            } else {
+                console.error("Помилка трансформації");
+                alert("Помилка на сервері при зміні регістру.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Помилка з'єднання.");
+        }
     }
 </script>
 </body>

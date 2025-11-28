@@ -20,7 +20,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Валідація і витягування логіну
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY.getBytes())
