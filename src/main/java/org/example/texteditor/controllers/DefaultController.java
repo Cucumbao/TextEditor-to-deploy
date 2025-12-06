@@ -66,7 +66,7 @@ public class DefaultController {
         }
 
 
-        String filePath = "C:\\Users\\АНЮТА\\IdeaProjects\\TextEditor\\src\\uploads\\" + originalName;
+        String filePath = "uploads/" + originalName;
         File file = new File();
         file.setFileName(originalName);
         file.setContent(content);
